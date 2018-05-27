@@ -10,28 +10,31 @@ import pandas as pd
 import numpy as np
 import pickle
 import xgboost as xgb
+import matplotlib.pyplot as plt
 
 input_dir = os.path.join(os.pardir, 'Kesci-data')
 print('Input files:\n{}'.format(os.listdir(input_dir)))
 print('Loading data sets...')
 
+
 # =============================================================================
-## add columns name
+# # add columns name
 # app_launch_df = pd.read_table(os.path.join(input_dir, 'app_launch_log.txt'),header=None)
 # user_register_df = pd.read_table(os.path.join(input_dir, 'user_register_log.txt'),header=None)
 # video_create_df = pd.read_table(os.path.join(input_dir, 'video_create_log.txt'),header=None)
 # user_activity_df = pd.read_table(os.path.join(input_dir, 'user_activity_log.txt'),header=None)
-# 
+#  
 # app_launch_df.columns = ['user_id','day']
 # user_register_df.columns = ['user_id','register_day','register_type','device_type']
 # video_create_df.columns = ['user_id','day']
 # user_activity_df.columns = ['user_id','day','page','video_id','author_id','action_type']
-
-# pickle.dump(app_launch_df,open("Data/app_launch.pkl","wb")) 
-# pickle.dump(user_register_df,open("Data/user_register.pkl","wb")) 
-# pickle.dump(video_create_df,open("Data/video_create.pkl","wb")) 
-# pickle.dump(user_activity_df,open("Data/user_activity.pkl","wb")) 
+# 
+# pickle.dump(app_launch_df,open(os.path.join(input_dir, 'app_launch.pkl'),"wb")) 
+# pickle.dump(user_register_df,open(os.path.join(input_dir, 'user_register.pkl'),"wb")) 
+# pickle.dump(video_create_df,open(os.path.join(input_dir, 'video_create.pkl'),"wb")) 
+# pickle.dump(user_activity_df,open(os.path.join(input_dir, 'user_activity.pkl'),"wb")) 
 # =============================================================================
+
 
 #launch_df = pickle.load(open("Data/app_launch.pkl","rb"))
 #register_df = pickle.load(open("Data/user_register.pkl","rb"))
@@ -67,7 +70,7 @@ def create_data(start_day,end_day,launch_df,video_df,activity_df,register_df):
     return merged_df
 
 # training data
-x_train_start = 1; x_train_end = 23; y_train_start = 24; y_train_end = 30;
+x_train_start = 13; x_train_end = 23; y_train_start = 24; y_train_end = 30;
 merged_df_x_train = create_data(x_train_start,x_train_end,launch_df,video_df,activity_df,register_df)
 merged_df_y_train = create_data(y_train_start,y_train_end,launch_df,video_df,activity_df,register_df)
 merged_df_y_train = merged_df_y_train.fillna(0)
@@ -81,7 +84,7 @@ x_train = merged_df_train.drop(['user_id','total_count'],axis=1).values
 y_train = merged_df_train['total_count'].values
 
 # test data
-x_test_start = 1; x_test_end = 30; y_test_start = 24; y_test_end = 30;
+x_test_start = 20; x_test_end = 30; y_test_start = 24; y_test_end = 30;
 merged_df_x_test = create_data(x_test_start,x_test_end,launch_df,video_df,activity_df,register_df)
 merged_df_y_test = create_data(y_test_start,y_test_end,launch_df,video_df,activity_df,register_df)
 merged_df_y_test = merged_df_y_test.fillna(0)
@@ -112,8 +115,6 @@ gbm = xgb.XGBClassifier(
 
 
 
-#predictions = gbm.predict(x_test)
-#base_score = np.sum((y_test == predictions),axis = 0)/len(predictions)
 predictions = gbm.predict(x_test)
 active_id = pd.DataFrame(data=predictions,columns=['isactive'])
 result = merged_df_test.loc[active_id['isactive'] > 0]['user_id']
@@ -123,16 +124,46 @@ accuracy = np.sum((y_test == predictions),axis = 0)/len(predictions)
 
 # F1 score
 M = np.sum(predictions)
-N = np.sum(y_train)
-MandN = np.sum((predictions + y_train)>1)
+N = np.sum(y_test)
+MandN = np.sum((predictions + y_test)>1)
 precision = MandN/M
 recall = MandN/N
 F1_score = 2*precision*recall/(precision + recall)
 
-accuracy,F1_score
 print(accuracy,F1_score)
 
-effect_record = [x_train_start,x_train_end,y_train_start,y_train_end,accuracy,F1_score]
+def get_xgb_feat_importances(clf):
+
+    if isinstance(clf, xgb.XGBModel):
+        # clf has been created by calling
+        # xgb.XGBClassifier.fit() or xgb.XGBRegressor().fit()
+        fscore = clf.booster().get_fscore()
+    else:
+        # clf has been created by calling xgb.train.
+        # Thus, clf is an instance of xgb.Booster.
+        fscore = clf.get_fscore()
+
+    feat_importances = []
+    for ft, score in fscore.iteritems():
+        feat_importances.append({'Feature': ft, 'Importance': score})
+    feat_importances = pd.DataFrame(feat_importances)
+    feat_importances = feat_importances.sort_values(
+        by='Importance', ascending=False).reset_index(drop=True)
+    # Divide the importances by the sum of all importances
+    # to get relative importances. By using relative importances
+    # the sum of all importances will equal to 1, i.e.,
+    # np.sum(feat_importances['importance']) == 1
+    feat_importances['Importance'] /= feat_importances['Importance'].sum()
+    # Print the most important features and their importances
+#    print feat_importances.head()
+    return feat_importances
+
+feat_importances = get_xgb_feat_importances(gbm)
+#fig, ax = plt.subplots(figsize=(12,18))
+#xgb.plot_importance(gbm, max_num_features=50, height=0.8,ax=ax)
+#plt.show()
+
+effect_record = [x_train_start,x_train_end,y_train_start,y_train_end,x_test_start,x_test_end,y_test_start,y_test_end,accuracy,F1_score]
 effect_record = pd.DataFrame(data=effect_record).T
 effect_record.to_csv('effect_record.csv', index=False, header=False, mode='a')
 

@@ -69,4 +69,4 @@ Created on Sat May 26 22:39:36 2018
 
 df.to_csv('A.txt', index=False)
 
-effect_record = [x_train_start,x_train_end,y_train_start,y_train_end,accuracy,F1_score]
+t = activity_df[['action_type']].drop_duplicates()
