@@ -1,0 +1,2 @@
+x_train_start,x_train_end,y_train_start,y_train_end,accuracy_train,F1_score_train
+1.0,23.0,24.0,30.0,0.8870602796418419,0.8992269464384317
