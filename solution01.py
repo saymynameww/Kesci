@@ -11,7 +11,7 @@ import numpy as np
 import pickle
 import xgboost as xgb
 
-input_dir = 'data'
+input_dir = os.path.join(os.pardir, 'Kesci-data')
 print('Input files:\n{}'.format(os.listdir(input_dir)))
 print('Loading data sets...')
 
@@ -33,11 +33,14 @@ print('Loading data sets...')
 # pickle.dump(user_activity_df,open("Data/user_activity.pkl","wb")) 
 # =============================================================================
 
-launch_df = pickle.load(open("Data/app_launch.pkl","rb"))
-register_df = pickle.load(open("Data/user_register.pkl","rb"))
-video_df = pickle.load(open("Data/video_create.pkl","rb"))
-activity_df = pickle.load(open("Data/user_activity.pkl","rb"))
-
+#launch_df = pickle.load(open("Data/app_launch.pkl","rb"))
+#register_df = pickle.load(open("Data/user_register.pkl","rb"))
+#video_df = pickle.load(open("Data/video_create.pkl","rb"))
+#activity_df = pickle.load(open("Data/user_activity.pkl","rb"))
+launch_df = pickle.load(open(os.path.join(input_dir, 'app_launch.pkl'),"rb"))
+register_df = pickle.load(open(os.path.join(input_dir, 'user_register.pkl'),"rb"))
+video_df = pickle.load(open(os.path.join(input_dir, 'video_create.pkl'),"rb"))
+activity_df = pickle.load(open(os.path.join(input_dir, 'user_activity.pkl'),"rb"))
 
 print('merging data sets...')
 def select_df(start_day,end_day,original_df):
