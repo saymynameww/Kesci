@@ -70,3 +70,28 @@ Created on Sat May 26 22:39:36 2018
 df.to_csv('A.txt', index=False)
 
 t = activity_df[['action_type']].drop_duplicates()
+
+
+l = launch_df.loc[launch_df['user_id'].drop_duplicates().index]
+l2 = register_df.merge(l, on='user_id',left_index=True, how='left')
+
+merged_df_y_train['total_count'] = np.sum(merged_df_y_train[['launch_count','video_count','activity_count']],axis = 1)
+
+
+# =============================================================================
+# # 7 days active
+# userPre = activity_df[activity_df.day>=24]
+# sub = userPre[['user_id']].drop_duplicates()
+# sub.to_csv('sub.txt', index=False)
+# result_list = list(result)
+# t1 = sub.isin(result_list)
+# print(np.sum(t1))
+# sub['active_7_days'] = 1
+# merged_sub = merged_df_test.merge(sub, on='user_id', left_index=True, how='left')
+# merged_sub = merged_sub.fillna(0)
+# m = merged_sub.loc[merged_sub['active_7_days'] != merged_sub['total_count']]
+# 
+# userPre_video = video_df[video_df.day>=24]
+# sub_video = userPre_video[['user_id']].drop_duplicates()
+# sub_video.to_csv('sub_video.txt', index=False)
+# =============================================================================

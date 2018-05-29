@@ -67,7 +67,13 @@ x_train_start = 17; x_train_end = 23; y_train_start = 24; y_train_end = 30;
 merged_df_x_train = create_data(x_train_start,x_train_end,launch_df,video_df,activity_df,register_df)
 merged_df_y_train = create_data(y_train_start,y_train_end,launch_df,video_df,activity_df,register_df)
 merged_df_y_train = merged_df_y_train.fillna(0)
-merged_df_y_train['total_count'] = np.sum(merged_df_y_train[['video_count','activity_count']],axis = 1)
+merged_df_y_train['total_count'] = np.sum(merged_df_y_train[['launch_count','video_count','activity_count']],axis = 1)
+
+merged_df_y_train = merged_df_y_train.sort_values(by=['total_count'],ascending = False)
+sub = merged_df_y_train.head(20244)
+sub = sub[['user_id']]
+sub.to_csv('20244.txt', index=False, header=False)
+
 merged_df_y_train.loc[merged_df_y_train['total_count'] > 1, 'total_count'] = 1
 drop_elements = ['launch_count','video_count','activity_count','register_day','register_type','device_type']
 merged_df_y_train = merged_df_y_train.drop(drop_elements,axis=1)
@@ -81,7 +87,7 @@ x_test_start = 24; x_test_end = 30; y_test_start = 24; y_test_end = 30;
 merged_df_x_test = create_data(x_test_start,x_test_end,launch_df,video_df,activity_df,register_df)
 merged_df_y_test = create_data(y_test_start,y_test_end,launch_df,video_df,activity_df,register_df)
 merged_df_y_test = merged_df_y_test.fillna(0)
-merged_df_y_test['total_count'] = np.sum(merged_df_y_test[['video_count','activity_count']],axis = 1)
+merged_df_y_test['total_count'] = np.sum(merged_df_y_test[['launch_count','video_count','activity_count']],axis = 1)
 merged_df_y_test.loc[merged_df_y_test['total_count'] > 1, 'total_count'] = 1
 drop_elements = ['launch_count','video_count','activity_count','register_day','register_type','device_type']
 merged_df_y_test = merged_df_y_test.drop(drop_elements,axis=1)
