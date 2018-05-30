@@ -70,9 +70,9 @@ merged_df_y_train = merged_df_y_train.fillna(0)
 merged_df_y_train['total_count'] = np.sum(merged_df_y_train[['launch_count','video_count','activity_count']],axis = 1)
 
 merged_df_y_train = merged_df_y_train.sort_values(by=['total_count'],ascending = False)
-sub = merged_df_y_train.head(20244)
+sub = merged_df_y_train.head(23727)
 sub = sub[['user_id']]
-sub.to_csv('20244.txt', index=False, header=False)
+sub.to_csv('23727.txt', index=False, header=False)
 
 merged_df_y_train.loc[merged_df_y_train['total_count'] > 1, 'total_count'] = 1
 drop_elements = ['launch_count','video_count','activity_count','register_day','register_type','device_type']

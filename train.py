@@ -11,10 +11,18 @@ import numpy as np
 import xgboost as xgb
 import pickle
 
+from xgboost.sklearn import XGBClassifier  
+#from sklearn.model_selection import GridSearchCV,cross_val_score  
+from sklearn import cross_validation, metrics
+from sklearn.grid_search import GridSearchCV
+
+import matplotlib.pylab as plt  
+from matplotlib.pylab import rcParams
+rcParams['figure.figsize'] = 12, 4
+
 input_dir = os.path.join(os.pardir, 'Kesci-data')
 print('Input files:\n{}'.format(os.listdir(input_dir)))
 print('Loading data sets...')
-
 register_df = pickle.load(open(os.path.join(input_dir, 'user_register.pkl'),"rb"))
 launch_df = pickle.load(open(os.path.join(input_dir, 'app_launch.pkl'),"rb"))
 video_df = pickle.load(open(os.path.join(input_dir, 'video_create.pkl'),"rb"))
@@ -34,15 +42,24 @@ def data_during(start_day,end_day):
     merged_df = launch_freq.merge(video_freq,how='outer',on='user_id')
     merged_df = merged_df.merge(activity_freq,how='outer',on='user_id')
     merged_df = merged_df.fillna(0)
+    merged_df['total_count'] = np.sum(merged_df[['launch_count','video_count','activity_count']],axis = 1)
     return merged_df
 
 
 def prepare_set(start_day,end_day):
     user_info = register_df.loc[(register_df['register_day'] >= start_day) & (register_df['register_day'] <= end_day)]
-    x_raw = user_info.merge(data_during(end_day-6,end_day-1),how='left',on='user_id').fillna(0)
+    x_raw = user_info.merge(data_during(end_day-6,end_day-0),how='left',on='user_id').fillna(0)
     x_raw = x_raw.merge(data_during(end_day-13,end_day-7),how='left',on='user_id').fillna(0)
     x_raw = x_raw.merge(data_during(end_day-22,end_day-14),how='left',on='user_id').fillna(0)
     x_raw = x_raw.merge(data_during(end_day-0,end_day-0),how='left',on='user_id').fillna(0)
+    
+    activity_df_selected = activity_df.loc[(activity_df['day'] >= start_day) & (activity_df['day'] <= end_day)]
+    author_count = pd.DataFrame(activity_df_selected['author_id'].value_counts())
+    author_count['index'] = author_count.index
+    author_count.columns = ['author_count','author_id']
+    x_raw = x_raw.merge(author_count,how='left',left_on='user_id',right_on='author_id')
+    x_raw = x_raw.drop(['author_id'],axis=1)
+    
     label_data = data_during(end_day+1,end_day+7)
     label_data['total_count'] = np.sum(label_data[['launch_count','video_count','activity_count']],axis = 1)
     label_data.loc[label_data['total_count'] > 1, 'total_count'] = 1
@@ -52,8 +69,8 @@ def prepare_set(start_day,end_day):
     y = xy_set['total_count'].values
     return x,y
 
-x_train,y_train = prepare_set(1,23)
-x_test,y_test = prepare_set(1,30)
+train_x,train_y = prepare_set(1,23)
+test_x,test_y = prepare_set(1,30)
 
 print('training...')
 gbm = xgb.XGBClassifier(
@@ -67,10 +84,10 @@ gbm = xgb.XGBClassifier(
         colsample_bytree=0.8,
         objective= 'binary:logistic',
         nthread= -1,
-        scale_pos_weight=1).fit(x_train, y_train)
+        scale_pos_weight=1).fit(train_x, train_y)
 
 
-predictions = gbm.predict(x_test)
+predictions = gbm.predict(test_x)
 user_all = register_df.loc[(register_df['register_day'] >= 1) & (register_df['register_day'] <= 30)]
 user_all['isactive']=predictions
 result = user_all.loc[user_all['isactive'] > 0]['user_id']
@@ -87,14 +104,50 @@ def result_score(y,predictions):
     F1_score = 2*precision*recall/(precision + recall)
     return accuracy,F1_score
 
-predictions_valid = gbm.predict(x_train)
-print(result_score(y_train,predictions_valid))
+predictions_valid = gbm.predict(train_x)
+print(result_score(train_y,predictions_valid))
 
-
-
-
-
-
+# =============================================================================
+# def modelMetrics(clf,train_x,train_y,isCv=True,cv_folds=5,early_stopping_rounds=50):  
+#     if isCv:  
+#         xgb_param = clf.get_xgb_params()  
+#         xgtrain = xgb.DMatrix(train_x,label=train_y)  
+#         cvresult = xgb.cv(xgb_param,xgtrain,num_boost_round=clf.get_params()['n_estimators'],nfold=cv_folds,  
+#                           metrics='auc',early_stopping_rounds=early_stopping_rounds)#是否显示目前几颗树额  
+#         clf.set_params(n_estimators=cvresult.shape[0]) 
+#     
+#     #训练  
+#     clf.fit(train_x,train_y,eval_metric='auc')  
+#   
+#     #预测  
+#     train_predictions = clf.predict(train_x)  
+#     train_predprob = clf.predict_proba(train_x)[:,1]#1的概率  
+#   
+#     #打印  
+#     print("\nModel Report")  
+#     print("Accuracy : %.4g" % metrics.accuracy_score(train_y, train_predictions))  
+#     print("AUC Score (Train): %f" % metrics.roc_auc_score(train_y, train_predprob))  
+#   
+#     feat_imp = pd.Series(clf.booster().get_fscore()).sort_values(ascending=False)  
+#     feat_imp.plot(kind='bar',title='Feature importance')  
+#     plt.ylabel('Feature Importance Score')  
+# 
+# def tun_parameters(train_x,train_y):  
+#     xgb1 = XGBClassifier(learning_rate=0.1,n_estimators=1000,max_depth=5,min_child_weight=1,gamma=0,subsample=0.8,  
+#                          colsample_bytree=0.8,objective= 'binary:logistic',nthread=4,scale_pos_weight=1,seed=27)  
+#     modelMetrics(xgb1,train_x,train_y)
+# 
+# param_test1 = {
+#  'max_depth':range(3,10,2),
+#  'min_child_weight':range(1,6,2)
+# }
+# gsearch1 = GridSearchCV(estimator = XGBClassifier( learning_rate =0.1, n_estimators=140, max_depth=5,
+#  min_child_weight=1, gamma=0, subsample=0.8, colsample_bytree=0.8,
+#  objective= 'binary:logistic', nthread=4, scale_pos_weight=1, seed=27), 
+#  param_grid = param_test1, scoring='roc_auc',n_jobs=4,iid=False, cv=5)
+# gsearch1.fit(train[predictors],train[target])
+# gsearch1.grid_scores_, gsearch1.best_params_, gsearch1.best_score_
+# =============================================================================
 
 
 
