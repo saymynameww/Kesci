@@ -66,7 +66,9 @@ def prepare_set(start_day,end_day):
     return x,y
 
 train_x,train_y = prepare_set(1,23)
+train_x = np.delete(train_x,[4,8,12,16],axis=1)
 test_x,test_y = prepare_set(1,30)
+test_x = np.delete(test_x,[4,8,12,16],axis=1)
 
 print('training...')
 gbm = xgb.XGBClassifier(

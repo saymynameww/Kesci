@@ -52,17 +52,19 @@ def prepare_set(start_day,end_day):
     x_raw = x_raw.merge(data_during(end_day-22,end_day-14),how='left',on='user_id').fillna(0)
     x_raw = x_raw.merge(data_during(end_day-0,end_day-0),how='left',on='user_id').fillna(0)
     
-    activity_df_selected = activity_df.loc[(activity_df['day'] >= start_day) & (activity_df['day'] <= end_day)]#训练集和测试集时间区间是否应保持一致？
-    author_count = pd.DataFrame(activity_df_selected['author_id'].value_counts())
-    author_count['index'] = author_count.index
-    author_count.columns = ['author_count','author_id']
-    x_raw = x_raw.merge(author_count,how='left',left_on='user_id',right_on='author_id').fillna(0)
-    x_raw = x_raw.drop(['author_id'],axis=1)#改列名
-    
-    for i in range(6):
-        action_freq = activity_df_selected[['user_id','action_type']].loc[activity_df_selected['action_type']==i]
-        action_freq = action_freq.groupby('user_id').agg({'user_id': 'mean', 'action_type': 'count'})
-        x_raw = x_raw.merge(action_freq,how='left',on='user_id').fillna(0)#改列名
+# =============================================================================
+#     activity_df_selected = activity_df.loc[(activity_df['day'] >= start_day) & (activity_df['day'] <= end_day)]#训练集和测试集时间区间是否应保持一致？
+#     author_count = pd.DataFrame(activity_df_selected['author_id'].value_counts())
+#     author_count['index'] = author_count.index
+#     author_count.columns = ['author_count','author_id']
+#     x_raw = x_raw.merge(author_count,how='left',left_on='user_id',right_on='author_id').fillna(0)
+#     x_raw = x_raw.drop(['author_id'],axis=1)#改列名
+#     
+#     for i in range(6):
+#         action_freq = activity_df_selected[['user_id','action_type']].loc[activity_df_selected['action_type']==i]
+#         action_freq = action_freq.groupby('user_id').agg({'user_id': 'mean', 'action_type': 'count'})
+#         x_raw = x_raw.merge(action_freq,how='left',on='user_id').fillna(0)#改列名
+# =============================================================================
     
     label_data = data_during(end_day+1,end_day+7)
     label_data['total_count'] = np.sum(label_data[['launch_count','video_count','activity_count']],axis = 1)
@@ -101,21 +103,20 @@ def modelFit(clf,train_x,train_y,isCv=True,cv_folds=5,early_stopping_rounds=50):
     print("Accuracy : %.4g" % metrics.accuracy_score(train_y, train_predictions))  
     print("AUC Score (Train): %f" % metrics.roc_auc_score(train_y, train_predprob))  
   
-    feat_imp = pd.Series(clf.booster().get_fscore()).sort_values(ascending=False)  
+    feat_imp = pd.Series(clf.get_booster().get_fscore()).sort_values(ascending=False)  
     feat_imp.plot(kind='bar',title='Feature importance')  
     plt.ylabel('Feature Importance Score')  
 
-# 类别平衡的问题：min_child_weight=2,scale_pos_weight=0,
-def tun_parameters(train_x,train_y):  
-    xgb1 = XGBClassifier(learning_rate=0.1,n_estimators=1000,max_depth=5,min_child_weight=1,gamma=0,subsample=0.8,  
-                         colsample_bytree=0.8,objective= 'binary:logistic',nthread=4,scale_pos_weight=1,seed=27)  
-    modelFit(xgb1,train_x,train_y)
+# 类别平衡的问题：min_child_weight=2,scale_pos_weight=sum(negative cases) / sum(positive cases),
+xgb1 = XGBClassifier(learning_rate=0.1,n_estimators=1000,max_depth=5,min_child_weight=1,gamma=0,subsample=0.8,  
+                     colsample_bytree=0.8,objective= 'binary:logistic',nthread=4,scale_pos_weight=1,seed=27)  
+modelFit(xgb1,train_x,train_y)
 
 ## tuning max_depth and min_child_weight
 # n_estimators根据上面结果改,n_jobs可以设置并行CPU核数
 param_test1 = {
-        'max_depth':range(3,10,2),
-        'min_child_weight':range(1,6,2)
+        'max_depth':[i for i in range(3,10,2)],
+        'min_child_weight':[i for i in range(1,6,2)]
 }  
 gsearch1 = GridSearchCV(estimator=XGBClassifier(learning_rate =0.1, n_estimators=140, max_depth=5, 
                                                 min_child_weight=1, gamma=0, subsample=0.8,colsample_bytree=0.8,  
@@ -248,4 +249,23 @@ xgb4 = XGBClassifier(
         seed=27)
 modelFit(xgb4,train_x,train_y)
 
+gbm = xgb4.fit(train_x, train_y)
+predictions = gbm.predict(test_x)
+user_all = register_df.loc[(register_df['register_day'] >= 1) & (register_df['register_day'] <= 30)]
+user_all['isactive']=predictions
+result = user_all.loc[user_all['isactive'] > 0]['user_id']
+result.to_csv('result.txt', index=False)
 
+def result_score(y,predictions):
+    accuracy = np.sum((y == predictions),axis = 0)/len(predictions)
+    # F1 score
+    M = np.sum(predictions)
+    N = np.sum(y)
+    MandN = np.sum((predictions + y)>1)
+    precision = MandN/M
+    recall = MandN/N
+    F1_score = 2*precision*recall/(precision + recall)
+    return accuracy,F1_score
+
+predictions_valid = gbm.predict(train_x)
+print(result_score(train_y,predictions_valid))
