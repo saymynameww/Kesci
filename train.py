@@ -71,15 +71,29 @@ test_x,test_y = prepare_set(1,30)
 test_x = np.delete(test_x,[4,8,12,16],axis=1)
 
 print('training...')
+# =============================================================================
+# gbm = xgb.XGBClassifier(
+#         #learning_rate = 0.02,
+#         n_estimators= 2000,
+#         max_depth= 4,
+#         min_child_weight= 2,
+#         #gamma=1,
+#         gamma=0.9,
+#         subsample=0.8,
+#         colsample_bytree=0.8,
+#         objective= 'binary:logistic',
+#         nthread= -1,
+#         scale_pos_weight=1).fit(train_x, train_y)
+# =============================================================================
 gbm = xgb.XGBClassifier(
         #learning_rate = 0.02,
         n_estimators= 2000,
-        max_depth= 4,
+        max_depth= 5,
         min_child_weight= 2,
         #gamma=1,
-        gamma=0.9,
-        subsample=0.8,
-        colsample_bytree=0.8,
+        gamma=0,
+        subsample=0.9,
+        colsample_bytree=0.95,
         objective= 'binary:logistic',
         nthread= -1,
         scale_pos_weight=1).fit(train_x, train_y)
