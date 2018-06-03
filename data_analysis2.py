@@ -34,6 +34,7 @@ def data_during(start_day,end_day):
     merged_df = launch_freq.merge(video_freq,how='outer',on='user_id')
     merged_df = merged_df.merge(activity_freq,how='outer',on='user_id')
     merged_df = merged_df.fillna(0)
+    merged_df['total_count'] = np.sum(merged_df[['launch_count','video_count','activity_count']],axis = 1)
     return merged_df
 
 
@@ -41,8 +42,19 @@ def prepare_set(start_day,end_day):
     user_info = register_df.loc[(register_df['register_day'] >= start_day) & (register_df['register_day'] <= end_day)]
     x_raw = user_info.merge(data_during(end_day-7,end_day-0),how='left',on='user_id').fillna(0)
     x_raw = x_raw.merge(data_during(end_day-15,end_day-8),how='left',on='user_id').fillna(0)
-#    x_raw = x_raw.merge(data_during(end_day-22,end_day-14),how='left',on='user_id').fillna(0)
-#    x_raw = x_raw.merge(data_during(end_day-0,end_day-0),how='left',on='user_id').fillna(0)
+    
+    activity_df_selected = activity_df.loc[(activity_df['day'] >= start_day) & (activity_df['day'] <= end_day)]#训练集和测试集时间区间是否应保持一致？
+    author_count = pd.DataFrame(activity_df_selected['author_id'].value_counts())
+    author_count['index'] = author_count.index
+    author_count.columns = ['author_count','author_id']
+    x_raw = x_raw.merge(author_count,how='left',left_on='user_id',right_on='author_id').fillna(0)
+    x_raw = x_raw.drop(['author_id'],axis=1)#改列名
+    
+    for i in range(6):
+        action_freq = activity_df_selected[['user_id','action_type']].loc[activity_df_selected['action_type']==i]
+        action_freq = action_freq.groupby('user_id').agg({'user_id': 'mean', 'action_type': 'count'})
+        x_raw = x_raw.merge(action_freq,how='left',on='user_id').fillna(0)#改列名
+    
     label_data = data_during(end_day+1,end_day+7)
     label_data['total_count'] = np.sum(label_data[['launch_count','video_count','activity_count']],axis = 1)
     label_data.loc[label_data['total_count'] > 1, 'total_count'] = 1
