@@ -96,9 +96,9 @@ def deal_feature(path, user_id):
     feature = pd.merge(feature, pd.DataFrame(activity_feature), on='user_id', how='left')
 
 def get_data_feature():
-    train_data_1 = get_train_label(dataset_1_feat_dir,dataset_1_label_dir)
-    feature_1 = deal_feature(dataset_1_feat_dir,train_data_1['user_id'])
-    feature_1['label'] = train_data_1['label']
+    train_label_1 = get_train_label(dataset_1_feat_dir,dataset_1_label_dir)
+    feature_1 = deal_feature(dataset_1_feat_dir,train_label_1['user_id'])
+    feature_1['label'] = train_label_1['label']
 
 
 get_data_feature()
