@@ -7,6 +7,10 @@ Created on Sun Jun  3 18:47:58 2018
 
 import os
 import pandas as pd
+from datetime import datetime
+
+time_start = datetime.now()
+print('Start time:',time_start.strftime('%Y-%m-%d %H:%M:%S'))
 
 print('Generating datasets...')
 input_dir = os.path.join(os.pardir, 'Kesci-data-dealt/sorted_data')
@@ -42,18 +46,22 @@ def generate_dataset():
     cut_data_on_time(dataset_1_feat_dir,begin_day,end_day)
     begin_day = 17
     end_day = 23
-    print('Cutting train data set 2 ...')
     cut_data_on_time(dataset_1_label_dir,begin_day,end_day)
+    print('Cutting train data set 2 ...')
     begin_day = 8
     end_day = 23
     cut_data_on_time(dataset_2_feat_dir,begin_day,end_day)
     begin_day = 24
     end_day = 30
-    print('Cutting test data set...')
     cut_data_on_time(dataset_2_label_dir,begin_day,end_day)
+    print('Cutting test data set...')
     begin_day = 15
     end_day = 30
     cut_data_on_time(dataset_3_feat_dir,begin_day,end_day)
     
 generate_dataset()
 print('Dataset generated.')
+
+time_end = datetime.now()
+print('End time:',time_end.strftime('%Y-%m-%d %H:%M:%S'))
+print('Total time:',"%.2f" % ((time_end-time_start).seconds/60),'minutes')

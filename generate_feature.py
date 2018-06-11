@@ -15,7 +15,8 @@ dataset_2_feat_dir = os.path.join(os.pardir, 'Kesci-data-dealt/dataset_2_feat')
 dataset_2_label_dir = os.path.join(os.pardir, 'Kesci-data-dealt/dataset_2_label')
 dataset_3_feat_dir = os.path.join(os.pardir, 'Kesci-data-dealt/dataset_3_feat')
 
-#register = 
+train_path = os.path.join(os.pardir, 'Kesci-data-dealt/train_and_test/train.csv')
+test_path = os.path.join(os.pardir, 'Kesci-data-dealt/train_and_test/test.csv')
 
 def get_train_label(feat_path,label_path):
     feat_register = pd.read_csv(feat_path + '/register.csv', usecols=['user_id'])
@@ -41,7 +42,7 @@ def get_train_label(feat_path,label_path):
     train_data['label'] = train_label
     return train_data
 
-def get_test(feat_path):
+def get_test_id(feat_path):
     feat_register = pd.read_csv(feat_path + '/register.csv', usecols=['user_id'])
     feat_launch = pd.read_csv(feat_path + '/launch.csv', usecols=['user_id'])
     feat_video = pd.read_csv(feat_path + '/video.csv', usecols=['user_id'])
@@ -79,7 +80,7 @@ def deal_feature(path, user_id):
     feature = pd.DataFrame()
     feature['user_id'] = user_id
     
-    register['max_day'] = np.max(register['register_day'])
+    register['max_day'] = np.max(register['register_day']) #?
     register_feature = register.groupby('user_id', sort=True).apply(get_register_feature)
     feature = pd.merge(feature, pd.DataFrame(register_feature), on='user_id', how='left')
     
@@ -94,11 +95,23 @@ def deal_feature(path, user_id):
     activity['max_day'] = np.max(register['register_day'])
     activity_feature = activity.groupby('user_id', sort=True).apply(get_activity_feature)
     feature = pd.merge(feature, pd.DataFrame(activity_feature), on='user_id', how='left')
+    return feature
 
 def get_data_feature():
     train_label_1 = get_train_label(dataset_1_feat_dir,dataset_1_label_dir)
-    feature_1 = deal_feature(dataset_1_feat_dir,train_label_1['user_id'])
-    feature_1['label'] = train_label_1['label']
+    data_1 = deal_feature(dataset_1_feat_dir,train_label_1['user_id'])
+    data_1['label'] = train_label_1['label']
+    
+    train_label_2 = get_train_label(dataset_2_feat_dir,dataset_2_label_dir)
+    data_2 = deal_feature(dataset_2_feat_dir,train_label_2['user_id'])
+    data_2['label'] = train_label_2['label']
+    
+    train_data = pd.concat([data_1,data_2])
+    train_data.to_csv(train_path,index=False)
+    
+    test_id = get_test_id(dataset_3_feat_dir)
+    test_data = deal_feature(dataset_3_feat_dir,test_id['user_id'])
+    test_data.to_csv(test_path,index=False)
 
 
 get_data_feature()
