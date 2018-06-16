@@ -7,17 +7,21 @@ Created on Sun Jun  3 18:47:58 2018
 
 import os
 import pandas as pd
+from datetime import datetime
+
+time_start = datetime.now()
+print('Start time:',time_start.strftime('%Y-%m-%d %H:%M:%S'))
 
 print('Generating datasets...')
-input_dir = os.path.join(os.pardir, 'Kesci-data-dealt/sorted_data')
+input_dir = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/sorted_data')
 print('Input files:\n{}'.format(os.listdir(input_dir)))
-dataset_1_feat_dir = os.path.join(os.pardir, 'Kesci-data-dealt/dataset_1_feat')
-dataset_1_label_dir = os.path.join(os.pardir, 'Kesci-data-dealt/dataset_1_label')
-dataset_2_feat_dir = os.path.join(os.pardir, 'Kesci-data-dealt/dataset_2_feat')
-dataset_2_label_dir = os.path.join(os.pardir, 'Kesci-data-dealt/dataset_2_label')
-dataset_3_feat_dir = os.path.join(os.pardir, 'Kesci-data-dealt/dataset_3_feat')
-dataset_3_label_dir = os.path.join(os.pardir, 'Kesci-data-dealt/dataset_3_label')
-dataset_4_feat_dir = os.path.join(os.pardir, 'Kesci-data-dealt/dataset_4_feat')
+dataset_1_feat_dir = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/dataset_1_feat')
+dataset_1_label_dir = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/dataset_1_label')
+dataset_2_feat_dir = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/dataset_2_feat')
+dataset_2_label_dir = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/dataset_2_label')
+dataset_3_feat_dir = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/dataset_3_feat')
+dataset_3_label_dir = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/dataset_3_label')
+dataset_4_feat_dir = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/dataset_4_feat')
 
 
 print('Loading data sets...')
@@ -66,3 +70,7 @@ def generate_dataset():
     
 generate_dataset()
 print('Dataset generated.')
+
+time_end = datetime.now()
+print('End time:',time_end.strftime('%Y-%m-%d %H:%M:%S'))
+print('Total time:',"%.2f" % ((time_end-time_start).seconds/60),'minutes')
