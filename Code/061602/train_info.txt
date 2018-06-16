@@ -1,0 +1,22 @@
+Training...
+All params: {'boosting_type': 'gbdt', 'objective': 'binary', 'metric': 'auc', 'verbose': 1, 'learning_rate': 0.04, 'num_leaves': 30, 'max_depth': 5, 'min_data_in_leaf': 40, 'feature_fraction': 1, 'bagging_fraction': 1, 'bagging_freq': 0, 'lambda_l1': 1, 'lambda_l2': 1, 'min_split_gain': 1}
+[100]	cv_agg's auc: 0.8844 + 0.0021418
+[200]	cv_agg's auc: 0.88509 + 0.00225606
+Optimum boost rounds = 212
+Best CV result = 0.8851187886922418
+[100]	valid_0's auc: 0.886132
+[200]	valid_0's auc: 0.887312
+Validating...
+二分阈值：0.4
+f1_score：0.8123724289527399
+特征阈值：1 特征数：139
+所用特征重要性：[53, 189, 315, 177, 221, 15, 3, 119, 57, 13, 15, 70, 72, 434, 6, 0, 0, 1, 1, 5, 18, 0, 43, 21, 0, 11, 52, 15, 8, 22, 29, 8, 40, 11, 105, 123, 51, 45, 38, 18, 0, 90, 59, 72, 66, 15, 126, 12, 7, 5, 66, 47, 81, 41, 13, 29, 63, 28, 48, 38, 16, 6, 28, 66, 42, 34, 71, 32, 24, 24, 74, 31, 31, 38, 27, 9, 37, 59, 39, 10, 30, 27, 5, 18, 18, 14, 26, 19, 30, 8, 24, 16, 24, 31, 25, 9, 17, 21, 19, 2, 11, 5, 0, 13, 0, 18, 20, 49, 32, 21, 19, 28, 39, 20, 9, 34, 12, 1, 2, 11, 1, 14, 24, 8, 2, 3, 13, 3, 0, 0, 8, 0, 0, 0, 34, 12, 138, 12, 51]
+Save result...
+为1的个数：25069
+为0的个数：26640
+submit_result_6161349.txt
+submit_threshold: 0.4
+predict_user_num: 25069
+submit_result_6161350.txt
+submit_threshold: 0.4417091841264297
+predict_user_num: 23727

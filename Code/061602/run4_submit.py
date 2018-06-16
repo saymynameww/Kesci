@@ -29,7 +29,7 @@ stdout_backup = sys.stdout
 sys.stdout = Logger("train_info.txt")
 submit_txt_name = 'submit_result_'+str(datetime.now().date().month)+str(datetime.now().date().day)+str(datetime.now().time().hour)+str(datetime.now().time().minute)+'.txt'
 print(submit_txt_name)
-active_user_id = submit(submit_mode=1,submit_threshold=0.4,submit_user_num=23727)
+active_user_id = submit(submit_mode=2,submit_threshold=0.4,submit_user_num=23727)
 sys.stdout = stdout_backup
 del active_user_id['result']
 active_user_id.to_csv(submit_txt_name, index=False, header=False)

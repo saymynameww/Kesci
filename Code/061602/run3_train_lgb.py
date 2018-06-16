@@ -24,27 +24,27 @@ test_path = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/train_
 train = pd.read_csv(train_path)
 test = pd.read_csv(test_path)
 
-#print('loading important features and label...')
-#feature_list = train.columns.values.tolist()
-#feature_list.remove('user_id')
-#feature_list.remove('label')
-#feature_list = np.array(feature_list)
-#feature_importance = [144, 175, 284, 216, 168, 74, 50, 100, 83, 58, 42, 72, 185, 167, 17, 3, 3, 5, 5, 8, 12, 2, 64, 42, 10, 18, 92, 20, 21, 40, 56, 33, 18, 7, 160, 211, 90, 75, 92, 56, 7, 64, 101, 92, 92, 40, 144, 42, 21, 9, 0, 0, 97, 83, 84, 47, 0, 14, 31, 82, 113, 68, 75, 66, 50, 56, 92, 61, 81, 83, 63, 73, 52, 98, 111, 75, 75, 45, 26, 45, 84, 79, 35, 49, 43, 22, 49, 50, 57, 36, 58, 51, 34, 52, 44, 75, 51, 57, 39, 32, 39, 88, 17, 20, 17, 5, 16, 4, 22, 112, 74, 88, 38, 58, 73, 103, 50, 24, 50, 33, 3, 19, 31, 11, 31, 27, 18, 7, 23, 16, 8, 1, 13, 11, 1, 7, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 98, 23, 115, 17, 55]
-#feature_importance = np.array(feature_importance)
-#feature_importance_check = np.vstack((feature_list,feature_importance)).T
-#feature_importance_check = pd.DataFrame(feature_importance_check)
-#feature_importance_check[1] = feature_importance_check[1].astype(int)
-#importance_threshold = 1
-#used_feature = feature_list[feature_importance>=importance_threshold]
-#train_feature = train[used_feature]
-#train_label = train['label']
-#test_feature = test[used_feature]
-
-print('loading all the features and label...')
-importance_threshold = 0
-train_feature = train.drop(['user_id','label'],axis=1)
+print('loading important features and label...')
+feature_list = train.columns.values.tolist()
+feature_list.remove('user_id')
+feature_list.remove('label')
+feature_list = np.array(feature_list)
+feature_importance = [144, 175, 284, 216, 168, 74, 50, 100, 83, 58, 42, 72, 185, 167, 17, 3, 3, 5, 5, 8, 12, 2, 64, 42, 10, 18, 92, 20, 21, 40, 56, 33, 18, 7, 160, 211, 90, 75, 92, 56, 7, 64, 101, 92, 92, 40, 144, 42, 21, 9, 0, 0, 97, 83, 84, 47, 0, 14, 31, 82, 113, 68, 75, 66, 50, 56, 92, 61, 81, 83, 63, 73, 52, 98, 111, 75, 75, 45, 26, 45, 84, 79, 35, 49, 43, 22, 49, 50, 57, 36, 58, 51, 34, 52, 44, 75, 51, 57, 39, 32, 39, 88, 17, 20, 17, 5, 16, 4, 22, 112, 74, 88, 38, 58, 73, 103, 50, 24, 50, 33, 3, 19, 31, 11, 31, 27, 18, 7, 23, 16, 8, 1, 13, 11, 1, 7, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 98, 23, 115, 17, 55]
+feature_importance = np.array(feature_importance)
+feature_importance_check = np.vstack((feature_list,feature_importance)).T
+feature_importance_check = pd.DataFrame(feature_importance_check)
+feature_importance_check[1] = feature_importance_check[1].astype(int)
+importance_threshold = 1
+used_feature = feature_list[feature_importance>=importance_threshold]
+train_feature = train[used_feature]
 train_label = train['label']
-test_feature = test.drop(['user_id'],axis=1)
+test_feature = test[used_feature]
+
+#print('loading all the features and label...')
+#importance_threshold = 0
+#train_feature = train.drop(['user_id','label'],axis=1)
+#train_label = train['label']
+#test_feature = test.drop(['user_id'],axis=1)
 
 X_train, X_test, Y_train, Y_test = model_selection.train_test_split(train_feature, train_label, test_size=0.2,random_state=1017)
 lgb_train = lgb.Dataset(X_train, Y_train)
@@ -194,7 +194,7 @@ def train_tune(mode):
         print('Tuning params DONE, best_params:',best_params)
         return params
     elif mode == 2:
-        params = {'boosting_type': 'gbdt', 'objective': 'binary', 'metric': 'auc', 'verbose': 1, 'learning_rate': 0.04, 'num_leaves': 30, 'max_depth': 5, 'min_data_in_leaf': 40, 'feature_fraction': 0.8, 'bagging_fraction': 0.8, 'bagging_freq': 10, 'lambda_l1': 1, 'lambda_l2': 1, 'min_split_gain': 1}
+        params = {'boosting_type': 'gbdt', 'objective': 'binary', 'metric': 'auc', 'verbose': 1, 'learning_rate': 0.04, 'num_leaves': 30, 'max_depth': 5, 'min_data_in_leaf': 40, 'feature_fraction': 1, 'bagging_fraction': 1, 'bagging_freq': 0, 'lambda_l1': 1, 'lambda_l2': 1, 'min_split_gain': 1}
         return params
     else:
         print('mode error!')
