@@ -73,30 +73,20 @@ def feature_selection(feature_mode,importance_threshold,R_threshold):
     train_feature, offline_test_feature, train_label, offline_test_label = train_test_split(train_feature, train_label, test_size=0.1,random_state=624)
     return train_feature,train_label,online_test_feature,test_userid,offline_test_feature,offline_test_label
 
-def cv_score(params):
-    cv_auc = []
-    print('All params:',params)
-    skf = StratifiedKFold(n_splits=N,shuffle=False,random_state=624)
-    for train_in,test_in in skf.split(train_feature,train_label):
-        if type(train_feature)==pd.core.frame.DataFrame:
-            X_train,X_test,y_train,y_test = train_feature.iloc[train_in],train_feature.iloc[test_in],train_label.iloc[train_in],train_label.iloc[test_in]
-        elif type(train_feature)==np.ndarray:
-            X_train,X_test,y_train,y_test = train_feature[train_in],train_feature[test_in],train_label[train_in],train_label[test_in]
+def auc_score(params):
+    lgb_train = lgb.Dataset(train_feature, train_label)
+    lgb_eval = lgb.Dataset(offline_test_feature, offline_test_label, reference=lgb_train)
     
-        lgb_train = lgb.Dataset(X_train, y_train)
-        lgb_eval = lgb.Dataset(X_test, y_test, reference=lgb_train)
-    
-        gbm = lgb.train(params,
-                        lgb_train,
-                        num_boost_round=10000,
-                        valid_sets=lgb_eval,
-                        verbose_eval=False,
-                        early_stopping_rounds=20)
-    
-        y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
-        cv_auc.append(roc_auc_score(y_test,y_pred))
-    mean_cv_auc = np.sum(cv_auc)/5
-    return mean_cv_auc
+    gbm = lgb.train(params,
+                    lgb_train,
+                    num_boost_round=10000,
+                    valid_sets=lgb_eval,
+                    verbose_eval=False,
+                    early_stopping_rounds=20)
+
+    y_pred = gbm.predict(offline_test_feature, num_iteration=gbm.best_iteration)
+    auc = roc_auc_score(offline_test_label,y_pred)
+    return auc
         
 def param_tune():
     print('Tuning params...')
@@ -105,7 +95,7 @@ def param_tune():
               'objective': 'binary',
               'metric': 'auc',
               }
-    max_auc = cv_score(params)
+    max_auc = auc_score(params)
     print('best auc updated:',max_auc)
     best_params = {}
     
@@ -113,7 +103,7 @@ def param_tune():
 #    for learning_rate in [0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1]: 
 #        print('============================',learning_rate)
 #        params['learning_rate'] = learning_rate
-#        auc = cv_score(params)
+#        auc = auc_score(params)
 #        if auc > max_auc:
 #            max_auc = auc
 #            print('best auc updated:',max_auc)
@@ -130,7 +120,7 @@ def param_tune():
 #            print('============================',num_leaves,max_depth)
 #            params['num_leaves'] = num_leaves
 #            params['max_depth'] = max_depth
-#            auc = cv_score(params)
+#            auc = auc_score(params)
 #            if auc > max_auc:
 #                max_auc = auc
 #                print('best auc updated:',max_auc)
@@ -148,7 +138,7 @@ def param_tune():
     for min_data_in_leaf in range(10,800,10): #(10,200,5)
         print('============================',min_data_in_leaf)
         params['min_data_in_leaf'] = min_data_in_leaf
-        auc = cv_score(params)
+        auc = auc_score(params)
         if auc > max_auc:
             max_auc = auc
             print('best auc updated:',max_auc)
@@ -167,7 +157,7 @@ def param_tune():
 #                params['feature_fraction'] = feature_fraction
 #                params['bagging_fraction'] = bagging_fraction
 #                params['bagging_freq'] = bagging_freq
-#                auc = cv_score(params)
+#                auc = auc_score(params)
 #                if auc > max_auc:
 #                    max_auc = auc
 #                    print('best auc updated:',max_auc)
@@ -193,7 +183,7 @@ def param_tune():
 #                params['lambda_l1'] = lambda_l1
 #                params['lambda_l2'] = lambda_l2
 #                params['min_split_gain'] = min_split_gain
-#                auc = cv_score(params)
+#                auc = auc_score(params)
 #                if auc > max_auc:
 #                    max_auc = auc
 #                    print('best auc updated:',max_auc)
@@ -286,7 +276,7 @@ if __name__ == "__main__":
     if param_mode == 1:
         params = param_tune()
     elif param_mode == 2:
-        params = {'boosting_type': 'gbdt', 'objective': 'binary', 'metric': 'auc', 'verbose': 1, 'learning_rate': 0.07, 'num_leaves': 32, 'max_depth': 5, 'min_data_in_leaf': 20, 'feature_fraction': 0.9, 'bagging_fraction': 0.8, 'bagging_freq': 5, 'lambda_l1': 1, 'lambda_l2': 1}#, 'min_split_gain': 1
+        params = {'boosting_type': 'gbdt', 'objective': 'binary', 'metric': 'auc', 'verbose': 1, 'learning_rate': 0.07, 'num_leaves': 32, 'max_depth': 5, 'min_data_in_leaf': 140, 'feature_fraction': 0.9, 'bagging_fraction': 0.8, 'bagging_freq': 5, 'lambda_l1': 1, 'lambda_l2': 1}#, 'min_split_gain': 1
     cv_auc,offline_auc,cv_prediction = train_func(params)
     predict_func()
     
