@@ -22,13 +22,18 @@ warnings.filterwarnings("ignore")
 time_start = datetime.now()
 print('Start time:',time_start.strftime('%Y-%m-%d %H:%M:%S'))
 print('Loading data...')
-train_path_a = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/train_and_test/train_a.csv')
-train_path_b = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/train_and_test/train_b.csv')
+#train_path_a = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/train_and_test/train_a.csv')
+#train_path_b = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/train_and_test/train_b.csv')
+#test_path = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/train_and_test/test.csv')
+#train_a = pd.read_csv(train_path_a)
+#train_b = pd.read_csv(train_path_b)
+#train = pd.concat([train_a,train_b],axis=0)
+##train = train_a
+#test = pd.read_csv(test_path)
+
+train_path = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/train_and_test/train.csv')
 test_path = os.path.join(os.pardir,os.pardir,os.pardir, 'Kesci-data-dealt/train_and_test/test.csv')
-train_a = pd.read_csv(train_path_a)
-train_b = pd.read_csv(train_path_b)
-train = pd.concat([train_a,train_b],axis=0)
-#train = train_a
+train = pd.read_csv(train_path)
 test = pd.read_csv(test_path)
 
 def feature_selection(feature_mode,R_threshold):
@@ -289,7 +294,7 @@ R_threshold = 0.05
 train_mode = 2
 show_importance = 0
 stdout_backup = sys.stdout
-sys.stdout = Logger("train_info.txt")
+#sys.stdout = Logger("train_info.txt")
 print('\n')
 train_feature,train_label,test_feature,importance_threshold = feature_selection(feature_mode,R_threshold)
 X_train, X_test, Y_train, Y_test = model_selection.train_test_split(train_feature, train_label, test_size=0.2,random_state=1017)
